@@ -122,11 +122,11 @@ def build():
 
     # ===== Body: neck + arms (auto weights), head (rigid), hands (nearest bone) =====
     bm = bmesh.new()
-    tube(bm, lerp_pts(Vector((0, 0.01, 1.43)), Vector((0, 0.0, 1.58)), 5), [(0.1, 0.1)] * 5, X, segs=20)
+    tube(bm, lerp_pts(Vector((0, 0.01, 1.43)), Vector((0, 0.0, 1.58)), 5), [(0.115, 0.11)] * 5, X, segs=20)
     for s in SIDES:
         sh, el, wr = H(f"upperarm_{s}"), H(f"lowerarm_{s}"), H(f"hand_{s}")
         pts = lerp_pts(sh - (el - sh).normalized() * 0.02, el, 6)[:-1] + lerp_pts(el, wr + (wr - el).normalized() * 0.01, 6)
-        sizes = [(0.102 - 0.026 * i / len(pts), 0.098 - 0.026 * i / len(pts)) for i in range(len(pts))]
+        sizes = [(0.118 - 0.034 * i / len(pts), 0.112 - 0.032 * i / len(pts)) for i in range(len(pts))]
         tube(bm, pts, sizes, Y, segs=18)
     limbs = finish("BodyLimbs", bm, ["skin"], M)
 
@@ -147,10 +147,10 @@ def build():
         width = (width - along * width.dot(along)).normalized()
         palm_c = hand.lerp(mid, 0.55)
         rot = Matrix((along, width, along.cross(width))).transposed().to_4x4()
-        rounded_box(bm, palm_c, (0.09, 0.1, 0.04), 0.016, rot=rot)
+        rounded_box(bm, palm_c, (0.1, 0.112, 0.046), 0.018, rot=rot)
         for f in ("index", "middle", "ring", "pinky", "thumb"):
             chain = [H(f"{f}_0{i}_{s}") for i in (1, 2, 3)] + [H(f"{f}_04_leaf_{s}")]
-            r = 0.0135 if f == "thumb" else 0.0115
+            r = 0.016 if f == "thumb" else 0.0135
             pts = [chain[0] - (chain[1] - chain[0]).normalized() * 0.012] + chain
             tube(bm, pts, [(2 * r, 2 * r)] * len(pts), Z, segs=10, cap1=r)
     hands = finish("Hands", bm, ["skin"], M)
@@ -192,14 +192,14 @@ def build():
 
     # ===== Shirt: torso + short sleeves (auto), collar, pocket, buttons (copied weights) =====
     bm = bmesh.new()
-    zs = [0.965, 1.05, 1.15, 1.25, 1.33, 1.4, 1.45, 1.48]
-    sz = [(0.35, 0.235), (0.35, 0.232), (0.37, 0.238), (0.39, 0.245), (0.405, 0.245), (0.41, 0.238), (0.4, 0.225), (0.37, 0.205)]
+    zs = [0.955, 1.05, 1.15, 1.25, 1.33, 1.4, 1.45, 1.485]
+    sz = [(0.385, 0.25), (0.39, 0.25), (0.41, 0.256), (0.44, 0.265), (0.46, 0.27), (0.47, 0.262), (0.455, 0.245), (0.42, 0.22)]
     tube(bm, [Vector((0, 0.02, z)) for z in zs], sz, X, n=3.4, segs=36, cap1=0.035, cap_rings=4)
     for s in SIDES:
         sh, el = H(f"upperarm_{s}"), H(f"lowerarm_{s}")
         d = (el - sh).normalized()
         pts = lerp_pts(sh - d * 0.03, sh + d * 0.17, 5)
-        tube(bm, pts, [(0.15, 0.145), (0.148, 0.142), (0.142, 0.135), (0.136, 0.128), (0.134, 0.125)], Y, n=2.4, segs=24)
+        tube(bm, pts, [(0.175, 0.168), (0.172, 0.165), (0.166, 0.158), (0.16, 0.152), (0.158, 0.15)], Y, n=2.4, segs=24)
     shirt_body = finish("ShirtBody", bm, ["shirt"], M)
 
     def shirt_front(z):
@@ -226,19 +226,19 @@ def build():
 
     # ===== Pants: hips + straight legs (auto) =====
     bm = bmesh.new()
-    tube(bm, lerp_pts(Vector((0, 0.022, 0.83)), Vector((0, 0.022, 1.02)), 4), [(0.34, 0.225), (0.345, 0.228), (0.35, 0.23), (0.35, 0.23)], X, n=3.2, segs=32, cap0=0.03)
+    tube(bm, lerp_pts(Vector((0, 0.022, 0.83)), Vector((0, 0.022, 1.02)), 4), [(0.37, 0.24), (0.375, 0.243), (0.38, 0.245), (0.38, 0.245)], X, n=3.2, segs=32, cap0=0.03)
     for s in SIDES:
         top, knee, ank = H(f"thigh_{s}") + Vector((0, 0, 0.02)), H(f"calf_{s}"), H(f"foot_{s}")
         pts = lerp_pts(top, knee, 7)[:-1] + lerp_pts(knee, ank, 7)
-        sizes = [(0.165 - 0.025 * min(1, i / 6), 0.17 - 0.02 * min(1, i / 6)) for i in range(len(pts))]
+        sizes = [(0.19 - 0.012 * min(1, i / 6), 0.195 - 0.012 * min(1, i / 6)) for i in range(len(pts))]
         tube(bm, pts, sizes, X, n=2.3, segs=24)
     pants = finish("Pants", bm, ["pants"], M)
 
     # ===== Belt + buckle (rigid pelvis) =====
     bm = bmesh.new()
-    tube(bm, lerp_pts(Vector((0, 0.022, 0.985)), Vector((0, 0.022, 1.025)), 3), [(0.36, 0.242)] * 3, X, n=3.2, segs=32)
+    tube(bm, lerp_pts(Vector((0, 0.022, 0.982)), Vector((0, 0.022, 1.03)), 3), [(0.395, 0.258)] * 3, X, n=3.2, segs=32)
     n0 = tag(bm, 0, 0)
-    rounded_box(bm, Vector((0, -0.1, 1.005)), (0.075, 0.014, 0.042), 0.005, segs=2)
+    rounded_box(bm, Vector((0, -0.108, 1.006)), (0.085, 0.014, 0.05), 0.005, segs=2)
     tag(bm, n0, 1)
     belt = finish("Belt", bm, ["belt", "buckle"], M)
 
@@ -246,16 +246,16 @@ def build():
     bm = bmesh.new()
     for s in SIDES:
         f = H(f"foot_{s}")
-        rounded_box(bm, Vector((f.x, -0.065, 0.048)), (0.118, 0.27, 0.095), 0.035, segs=3)
-        tube(bm, lerp_pts(Vector((f.x, 0.025, 0.06)), Vector((f.x, 0.03, 0.135)), 3), [(0.12, 0.13)] * 3, X, segs=20)
+        rounded_box(bm, Vector((f.x * 1.05, -0.07, 0.052)), (0.135, 0.3, 0.104), 0.035, segs=3)
+        tube(bm, lerp_pts(Vector((f.x, 0.025, 0.06)), Vector((f.x, 0.03, 0.135)), 3), [(0.14, 0.15)] * 3, X, segs=20)
     shoes = finish("Shoes", bm, ["shoes"], M)
 
     # ===== Watch (rigid left forearm) =====
     bm = bmesh.new()
     wr, el = H("hand_l"), H("lowerarm_l")
     d = (wr - el).normalized()
-    tube(bm, lerp_pts(wr - d * 0.045, wr - d * 0.02, 3), [(0.074, 0.07)] * 3, Y, segs=20)
-    rounded_box(bm, wr - d * 0.032 + Z * 0.035, (0.03, 0.036, 0.014), 0.005, segs=2)
+    tube(bm, lerp_pts(wr - d * 0.05, wr - d * 0.022, 3), [(0.092, 0.088)] * 3, Y, segs=20)
+    rounded_box(bm, wr - d * 0.036 + Z * 0.044, (0.032, 0.04, 0.014), 0.005, segs=2)
     watch = finish("Watch", bm, ["watch"], M)
 
     # ===== bigger, friendlier head (as in the reference); pivot at the eyes keeps the camera height =====
