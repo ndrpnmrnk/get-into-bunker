@@ -5,6 +5,8 @@ import { palette } from '../style/palette.js';
 import { applyToonMaterials } from '../render/toon.js';
 import { bodyScale, eyeHeightFor } from './body.js';
 
+const _q = new THREE.Quaternion(), _pq = new THREE.Quaternion(), _a = new THREE.Vector3();
+
 let source;
 /** Loads character.glb once; every call returns a new independent character. */
 export async function loadCharacter(loader) {
@@ -23,6 +25,14 @@ export class Character {
     this.actions = Object.fromEntries(gltf.animations.map((c) => [c.name, this.mixer.clipAction(c)]));
     this.current = null;
     this.body = { height: 175, width: 1 };
+    this.poseOffsets = []; // [{ bone, axis (character space), angle }], applied on top of the clip
+  }
+
+  /** Extra rotation of a bone around an axis given in the character's own space. */
+  setPoseOffset(boneName, axis, angle) {
+    const bone = this.root.getObjectByName(boneName);
+    const o = this.poseOffsets.find((p) => p.bone === bone);
+    if (o) o.angle = angle; else this.poseOffsets.push({ bone, axis: axis.clone().normalize(), angle });
   }
 
   /** 'idle' | 'walk' | 'jump' | 'crouchIdle' | 'crouchWalk' | 'sit' */
@@ -58,5 +68,22 @@ export class Character {
     }
   }
 
-  update(dt) { this.mixer.update(dt); }
+  update(dt) {
+    this.mixer.update(dt);
+    if (!this.poseOffsets.length) return;
+    this.root.updateMatrixWorld(true);
+    for (const o of this.poseOffsets) {
+      const { bone, axis, angle } = o;
+      // the mixer skips bones whose clip value did not change: start again from the clip pose
+      if (o.applied && bone.quaternion.equals(o.applied)) bone.quaternion.copy(o.base);
+      o.base = bone.quaternion.clone();
+      // axis in character space -> bone's parent space, then rotate the bone in it
+      _q.setFromAxisAngle(_a.copy(axis).transformDirection(this.root.matrixWorld), angle);
+      bone.parent.getWorldQuaternion(_pq);
+      _q.premultiply(_pq.clone().invert()).multiply(_pq);
+      bone.quaternion.premultiply(_q);
+      o.applied = bone.quaternion.clone();
+      bone.updateMatrixWorld(true);
+    }
+  }
 }

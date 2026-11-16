@@ -301,7 +301,7 @@ def build():
     select_only([pants], pants)
     bpy.ops.object.vertex_group_normalize_all(lock_active=False)
 
-    rigid(belt, "pelvis"); bind(belt, arm)
+    copy_weights(belt, pants); bind(belt, arm)  # bends with the trousers at the hips
     nearest_bone_weights(shoes, arm, [f"foot_{s}" for s in SIDES], blend=0); bind(shoes, arm)
     rigid(watch, "lowerarm_l"); bind(watch, arm)
 

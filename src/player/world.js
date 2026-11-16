@@ -52,7 +52,8 @@ export function createWalkWorld(island, { cell = 0.25, radius = 9.5 } = {}) {
       ray.far = Infinity;
       return ray.intersectObject(ob, true)[0]?.point.y ?? null;
     },
-    addBlocker(b) { dynamic.push(b); },
+    /** Adds a round obstacle; returns a function that removes it. */
+    addBlocker(b) { dynamic.push(b); return () => { const i = dynamic.indexOf(b); if (i >= 0) dynamic.splice(i, 1); }; },
     blocked(from, to) {
       for (const b of dynamic) {
         const dNew = Math.hypot(to.x - b.x, to.z - b.z), dOld = Math.hypot(from.x - b.x, from.z - b.z);
