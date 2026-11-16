@@ -109,7 +109,7 @@ def build():
     ellipsoid(bm, head_c, head_r, segs=40)
     body = new_obj("Body", bm)
     soften(body, 0.011, 10)
-    decimate(body, 5600)
+    decimate(body, 7000)
     set_material(body, mats, "skin")
 
     # ---- shoes ----
@@ -136,7 +136,7 @@ def build():
         d = (H(f"lowerarm_{s}") - H(f"upperarm_{s}")).normalized()
         cut(shirt, sleeve[s], d)
     thicken(shirt, 0.006)
-    decimate(shirt, 1800)
+    decimate(shirt, 3600)
     set_material(shirt, mats, "shirt")
 
     # ---- shorts shell ----
@@ -148,7 +148,7 @@ def build():
     cut(shorts, Vector((0, 0, waist_z + 0.02)), up)
     cut(shorts, Vector((0, 0, hem_z)), -up)
     thicken(shorts, 0.006)
-    decimate(shorts, 1600)
+    decimate(shorts, 2400)
     set_material(shorts, mats, "shorts")
 
     # ---- hands: palm + 3 fingers + thumb ----
@@ -205,7 +205,8 @@ def build():
                   if b.name.startswith(("hand_", "lowerarm_", "index_", "middle_", "ring_", "thumb_"))
                   and "leaf" not in b.name]
     nearest_bone_weights(hands, arm, hand_bones)
-    for ob in (shoes, shirt, shorts, eyes, pupils, mouth, hair):
+    nearest_bone_weights(shoes, arm, [f"foot_{s}" for s in SIDES])  # shoes are rigid blocks
+    for ob in (shirt, shorts, eyes, pupils, mouth, hair):
         copy_weights(ob, body)
     # shorts follow only the hips and thighs, otherwise the seat shears when walking
     for g in [g for g in shorts.vertex_groups if not g.name.startswith(("pelvis", "thigh_"))]:

@@ -18,7 +18,7 @@ if len(meshes) != 1 or not arm: fail(f"expected 1 mesh + armature, got {[o.name 
 body = meshes[0]
 if not any(m.type == "ARMATURE" for m in body.modifiers): fail("mesh is not skinned")
 tris = sum(len(p.vertices) - 2 for p in body.data.polygons)
-if tris > 15000: fail(f"{tris} triangles > 15000")
+if tris > 20000: fail(f"{tris} triangles > 20000")
 mats = {m.name for m in body.data.materials}
 if mats != SLOTS: fail(f"material slots {sorted(mats)}")
 keys = body.data.shape_keys

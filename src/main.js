@@ -10,6 +10,7 @@ import { createPanel } from './ui/panel.js';
 import { t } from './i18n/index.js';
 import { setupCharacters } from './character/probeSetup.js';
 import { setupVoice } from './voice/probeSetup.js';
+import { setupFirstPerson } from './player/probeSetup.js';
 
 const renderer = new THREE.WebGLRenderer({ antialias: false });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -89,6 +90,7 @@ async function init() {
   probe.panel.button('probe.viewCloseup', () => probe.views.closeup());
 
   await setupCharacters(probe, loader);
+  await setupFirstPerson(probe, loader);
   setupVoice(probe);
 
   const view = new URLSearchParams(location.search).get('view') ?? 'overview';
