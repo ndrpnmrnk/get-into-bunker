@@ -10,8 +10,11 @@ export function createWalkWorld(island, { cell = 0.25, radius = 9.5 } = {}) {
   island.updateMatrixWorld(true);
   const ground = island.getObjectByName('Ground');
   const blockers = island.getObjectByName('WalkBlockers');
+  const surfaces = {};
+  const dynamic = []; // round obstacles added at runtime (seated people)
   // BVH: thousands of rays against the ground would otherwise freeze the page for seconds
-  for (const root of [ground, blockers]) {
+  for (const name of ['Benches']) surfaces[name] = island.getObjectByName(name);
+  for (const root of [ground, blockers, ...Object.values(surfaces)].filter(Boolean)) {
     root.traverse((o) => {
       if (!o.isMesh) return;
       o.geometry.computeBoundsTree = computeBoundsTree;
@@ -41,7 +44,20 @@ export function createWalkWorld(island, { cell = 0.25, radius = 9.5 } = {}) {
       if (h.some(Number.isNaN)) return null; // off the plateau
       return (h[0] * (1 - u) + h[1] * u) * (1 - v) + (h[2] * (1 - u) + h[3] * u) * v;
     },
+    /** Top surface height of a named island object under (x, z), or null. */
+    topAt(name, x, z) {
+      const ob = surfaces[name];
+      if (!ob) return null;
+      ray.set(origin.set(x, 50, z), down);
+      ray.far = Infinity;
+      return ray.intersectObject(ob, true)[0]?.point.y ?? null;
+    },
+    addBlocker(b) { dynamic.push(b); },
     blocked(from, to) {
+      for (const b of dynamic) {
+        const dNew = Math.hypot(to.x - b.x, to.z - b.z), dOld = Math.hypot(from.x - b.x, from.z - b.z);
+        if (dNew < b.r + PLAYER_RADIUS && dNew < dOld) return true; // moving into someone
+      }
       dir.subVectors(to, from); dir.y = 0;
       const len = dir.length();
       if (len === 0) return false;

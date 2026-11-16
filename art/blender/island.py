@@ -115,7 +115,7 @@ def build():
         c = Vector((SEAT_R * math.cos(a), SEAT_R * math.sin(a), 0))
         t = Vector((-math.sin(a), math.cos(a), 0))
         gz = plateau_z(c.x, c.y)
-        capsule(bm, c - t * 1.15 + Vector((0, 0, gz + 0.22)), c + t * 1.15 + Vector((0, 0, gz + 0.22)), 0.23, 0.22, segs=20)
+        capsule(bm, c - t * 1.15 + Vector((0, 0, gz + 0.27)), c + t * 1.15 + Vector((0, 0, gz + 0.27)), 0.27, 0.26, segs=24)
         for j, off in enumerate((-0.55, 0.55)):
             p = c + t * off
             to_fire = -Vector((p.x, p.y, 0)).normalized()
