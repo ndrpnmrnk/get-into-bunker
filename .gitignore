@@ -5,3 +5,5 @@ art/build/*.png
 art/build/*.blend
 .superpowers/
 dist-artifact/
+art/blender/__pycache__/
+*.blend1
