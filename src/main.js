@@ -37,8 +37,8 @@ sun.position.set(12, 22, 8);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 16, bottom: -16, near: 1, far: 60 });
-sun.shadow.bias = -0.0005;
-sun.shadow.normalBias = 0.03;
+sun.shadow.bias = -0.0008;
+sun.shadow.normalBias = 0.05; // no speckled self-shadowing on clothes
 scene.add(sun);
 
 const controls = new OrbitControls(camera, renderer.domElement);

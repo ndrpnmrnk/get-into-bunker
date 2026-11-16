@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { palette, SLOT_DEFAULT } from '../style/palette.js';
+import { applyPaint } from './paint.js';
 
 let gradient;
 function gradientMap() {
@@ -18,7 +19,7 @@ export function createToonMaterial(colorKey) {
   if (!hex) throw new Error(`Unknown palette key: ${colorKey}`);
   const m = new THREE.MeshToonMaterial({ color: new THREE.Color(hex), gradientMap: gradientMap() });
   m.name = colorKey;
-  return m;
+  return applyPaint(m, colorKey);
 }
 
 /** Replaces glTF materials by name (palette key or character slot) with toon ones. */
