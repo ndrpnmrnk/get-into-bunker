@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { acceleratedRaycast, computeBoundsTree } from 'three-mesh-bvh';
 
 const PLAYER_RADIUS = 0.35;
 
@@ -7,7 +8,17 @@ export function createWalkWorld(island, { cell = 0.25, radius = 9.5 } = {}) {
   island.updateMatrixWorld(true);
   const ground = island.getObjectByName('Ground');
   const blockers = island.getObjectByName('WalkBlockers');
+  // BVH: thousands of rays against the ground would otherwise freeze the page for seconds
+  for (const root of [ground, blockers]) {
+    root.traverse((o) => {
+      if (!o.isMesh) return;
+      o.geometry.computeBoundsTree = computeBoundsTree;
+      o.geometry.computeBoundsTree();
+      o.raycast = acceleratedRaycast;
+    });
+  }
   const ray = new THREE.Raycaster();
+  ray.firstHitOnly = true;
   const down = new THREE.Vector3(0, -1, 0);
   const n = Math.ceil((radius * 2) / cell) + 1;
   const grid = new Float32Array(n * n).fill(NaN);

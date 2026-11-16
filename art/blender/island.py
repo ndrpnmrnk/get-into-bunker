@@ -153,14 +153,14 @@ def build():
 
     # ---- two stylized spruces: trunk + stacked soft tiers ----
     trunks, crowns, tree_xy = bmesh.new(), bmesh.new(), [(-5.6, 4.2), (6.0, 3.0)]
-    for (x, y), hgt in zip(tree_xy, (6.5, 5.4)):
+    for (x, y), hgt in zip(tree_xy, (7.6, 6.6)):
         z = plateau_z(x, y)
         capsule(trunks, Vector((x, y, z - 0.2)), Vector((x, y, z + hgt * 0.5)), 0.28, 0.18, segs=14)
         tiers = 5
         for t in range(tiers):
             f = t / (tiers - 1)
             rad = 2.0 * (1 - f) + 0.45
-            tz = z + 1.4 + f * (hgt - 1.6)
+            tz = z + 2.95 + f * (hgt - 3.1)  # lowest tier above head height
             res = bmesh.ops.create_cone(crowns, cap_ends=True, segments=40, radius1=rad, radius2=0.05,
                                         depth=1.6 - f * 0.5, matrix=Matrix.Translation((x, y, tz + 0.6)))
             for v in res["verts"]:
@@ -182,6 +182,12 @@ def build():
                               matrix=Matrix.Translation((x, y, plateau_z(x, y) + 1)))
     blockers = new_obj("WalkBlockers", bm)
     blockers.data.materials.append(material("rock"))
+    # boulders and benches are solid too: copies of their meshes join the blockers
+    copies = []
+    for src in (rocks, benches):
+        cp = src.copy(); cp.data = src.data.copy(); cp.modifiers.clear()
+        bpy.context.collection.objects.link(cp); copies.append(cp)
+    blockers = join([blockers] + copies, "WalkBlockers")
     for o in bpy.data.objects:
         if o.type == "MESH" and o.name != "WalkBlockers":
             select_only([o], o)

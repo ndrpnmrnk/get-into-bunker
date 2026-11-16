@@ -9,7 +9,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "three": "^0.187.0"
+    "three": "^0.187.0",
+    "three-mesh-bvh": "^0.9.18"
   },
   "devDependencies": {
     "playwright": "^1.65.1",

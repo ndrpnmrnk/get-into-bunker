@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { loadCharacter } from './character.js';
 import { VARIANTS } from './variants.js';
+import { LOG_TOP, seatedRootY } from './seat.js';
 
 const SEATS = ['Seat_0', 'Seat_1', 'Seat_3']; // the far side of the fire, facing the close-up camera
-const SEAT_HEIGHT = 0.45; // seat empties sit at log-top height; the sit clip expects the root on the ground
 
 /** Seats the three probe variants around the fire. */
 export async function setupCharacters(probe, loader) {
@@ -14,9 +14,13 @@ export async function setupCharacters(probe, loader) {
     c.setAppearance(v.look);
     const seat = probe.world.island.getObjectByName(SEATS[i]);
     seat.getWorldPosition(c.root.position);
-    c.root.position.y -= SEAT_HEIGHT;
     seat.getWorldQuaternion(c.root.quaternion);
     c.play('sit', 0);
+    c.update(0);
+    c.root.updateMatrixWorld(true);
+    const pelvis = c.root.getObjectByName('pelvis').getWorldPosition(new THREE.Vector3());
+    const logTop = probe.walkWorld.groundHeightAt(c.root.position.x, c.root.position.z) + LOG_TOP;
+    c.root.position.y = seatedRootY(logTop, pelvis.y - c.root.position.y);
     c.mixer.setTime(Math.random() * 3);
     probe.scene.add(c.root);
     probe.characters.push(c);

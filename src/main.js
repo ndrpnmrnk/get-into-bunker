@@ -11,6 +11,7 @@ import { t } from './i18n/index.js';
 import { setupCharacters } from './character/probeSetup.js';
 import { setupVoice } from './voice/probeSetup.js';
 import { setupFirstPerson } from './player/probeSetup.js';
+import { createWalkWorld } from './player/world.js';
 
 const renderer = new THREE.WebGLRenderer({ antialias: false });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -78,6 +79,7 @@ async function init() {
   island.getObjectByName('Grass').traverse((o) => o.layers.set(1));
   scene.add(island);
   probe.world.island = island;
+  probe.walkWorld = createWalkWorld(island);
 
   const water = createWater(outline);
   scene.add(water);

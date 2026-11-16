@@ -13,7 +13,8 @@ export function enableFirstPerson(character, camera) {
   character.update(0);
   character.root.updateMatrixWorld(true);
   const neckPos = neck.getWorldPosition(new THREE.Vector3());
-  const offset = character.eyeHeight() - (neckPos.y - character.root.position.y);
+  // neck height at body scale 1; the eye offset is recomputed each frame so setBody() is followed
+  const neckBase = (neckPos.y - character.root.position.y) / character.root.scale.y;
   const tmp = new THREE.Vector3(), fwd = new THREE.Vector3();
   return {
     /** Call after the mixer update each frame. */
@@ -23,7 +24,7 @@ export function enableFirstPerson(character, camera) {
       neck.getWorldPosition(tmp);
       fwd.set(-Math.sin(state.yaw), 0, -Math.cos(state.yaw));
       camera.position.copy(tmp).addScaledVector(fwd, FORWARD);
-      camera.position.y += offset;
+      camera.position.y += character.eyeHeight() - neckBase * character.root.scale.y;
       camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
     },
   };

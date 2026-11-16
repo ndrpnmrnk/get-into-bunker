@@ -28,4 +28,19 @@ g = O["Ground"]; sp = O["Spawn"].matrix_world.translation
 inv = g.matrix_world.inverted()
 hit, *_ = g.ray_cast(inv @ (sp + Vector((0, 0, 5))), inv.to_3x3() @ Vector((0, 0, -1)))
 if not hit: fail("no Ground under Spawn")
-print(f"PASS island.glb: {tris} tris, all nodes, seats face the fire, ground under spawn")
+# boulders and benches must be solid for walking
+blk = O["WalkBlockers"]; binv = blk.matrix_world.inverted()
+for name in ("Rocks", "Benches"):
+    ob = O[name]
+    for v in list(ob.data.vertices)[::40]:
+        p = ob.matrix_world @ v.co
+        hit, *_ = blk.ray_cast(binv @ Vector((p.x, p.y, p.z + 3)), binv.to_3x3() @ Vector((0, 0, -1)))
+        if not hit: fail(f"{name} is walk-through near {tuple(round(c, 1) for c in p)}")
+# the camera (eyes ~1.6 m) must not end up inside the lowest spruce tier
+trees = O["Trees"]
+crown_mats = [i for i, m in enumerate(trees.data.materials) if m.name == "grassDark"]
+crown_z = [(trees.matrix_world @ trees.data.vertices[vi].co).z for p in trees.data.polygons
+           if p.material_index in crown_mats for vi in p.vertices]
+ground_z = max((g.matrix_world @ v.co).z for v in g.data.vertices)
+if min(crown_z) < ground_z + 2.1: fail(f"lowest spruce tier at {min(crown_z) - ground_z:.2f} m above ground (< 2.1)")
+print(f"PASS island.glb: {tris} tris, all nodes, seats face the fire, ground under spawn, rocks/benches solid, crowns above heads")

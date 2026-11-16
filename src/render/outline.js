@@ -14,6 +14,7 @@ const fullscreen = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 export class OutlineRenderer {
   constructor(renderer, { color, thicknessCssPx = 1.5 }) {
     this.renderer = renderer;
+    renderer.shadowMap.autoUpdate = false; // updated once per frame, in the colour pass
     this.thicknessCssPx = thicknessCssPx;
     const opts = { type: THREE.HalfFloatType, samples: 4 };
     this.colorTarget = new THREE.WebGLRenderTarget(1, 1, opts);
@@ -88,6 +89,7 @@ export class OutlineRenderer {
     scene.background = bg; scene.fog = fog;
     camera.layers.mask = layers;
     // colour
+    r.shadowMap.needsUpdate = true;
     r.setRenderTarget(this.colorTarget);
     r.render(scene, camera);
     // composite to screen
