@@ -1,0 +1,12 @@
+{
+  "probe.title": "Get Into Bunker — проба стиля",
+  "probe.viewOverview": "Обзор",
+  "probe.viewCloseup": "У костра",
+  "probe.viewFirstPerson": "От первого лица",
+  "probe.variant": "Вариант персонажа",
+  "probe.mic": "Включить микрофон",
+  "probe.micOn": "Микрофон включён",
+  "probe.micDenied": "Микрофон недоступен — рот персонажа не будет двигаться",
+  "probe.fpvHint": "Кликни по сцене. WASD — ходить, мышь — смотреть, пробел — прыжок, C или Ctrl — присесть, Esc — выйти",
+  "probe.loading": "Загрузка…"
+}
