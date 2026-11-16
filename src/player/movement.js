@@ -6,6 +6,9 @@ export const JUMP_SPEED = 5;
 export const GRAVITY = 18;
 const MAX_PITCH = (85 * Math.PI) / 180;
 const SNAP_DOWN = 0.3; // stay glued to gentle slopes instead of hopping off them
+// scratch vectors: no allocations per step besides the returned position
+const fwd = new THREE.Vector3(), right = new THREE.Vector3(), dir = new THREE.Vector3();
+const steps = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()], to = new THREE.Vector3();
 
 export function newPlayerState(pos) {
   return { pos: pos.clone(), velY: 0, yaw: 0, pitch: 0, crouch: false, grounded: true, moving: false };
@@ -23,18 +26,19 @@ export function stepMovement(state, input, dt, world) {
   s.crouch = input.crouch;
 
   // camera looks along -Z at yaw 0
-  const fwd = new THREE.Vector3(-Math.sin(s.yaw), 0, -Math.cos(s.yaw));
-  const right = new THREE.Vector3(Math.cos(s.yaw), 0, -Math.sin(s.yaw));
-  const dir = new THREE.Vector3()
+  fwd.set(-Math.sin(s.yaw), 0, -Math.cos(s.yaw));
+  right.set(Math.cos(s.yaw), 0, -Math.sin(s.yaw));
+  dir.set(0, 0, 0)
     .addScaledVector(fwd, (input.forward ? 1 : 0) - (input.back ? 1 : 0))
     .addScaledVector(right, (input.right ? 1 : 0) - (input.left ? 1 : 0));
   s.moving = dir.lengthSq() > 0;
   if (s.moving) {
     const step = dir.normalize().multiplyScalar((s.crouch ? CROUCH_SPEED : WALK_SPEED) * dt);
     // full move, else slide along one axis
-    for (const d of [step, new THREE.Vector3(step.x, 0, 0), new THREE.Vector3(0, 0, step.z)]) {
+    steps[0].copy(step); steps[1].set(step.x, 0, 0); steps[2].set(0, 0, step.z);
+    for (const d of steps) {
       if (d.lengthSq() === 0) continue;
-      const to = s.pos.clone().add(d);
+      to.copy(s.pos).add(d);
       if (world.groundHeightAt(to.x, to.z) !== null && !world.blocked(s.pos, to)) {
         s.pos.x = to.x; s.pos.z = to.z;
         break;

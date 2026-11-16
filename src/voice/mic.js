@@ -9,6 +9,7 @@ export async function startMic() {
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: false },
     });
     const ctx = new AudioContext();
+    if (ctx.state === 'suspended') await ctx.resume();
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 1024;
     ctx.createMediaStreamSource(stream).connect(analyser);

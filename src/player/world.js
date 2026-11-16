@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { acceleratedRaycast, computeBoundsTree } from 'three-mesh-bvh';
 
 const PLAYER_RADIUS = 0.35;
+const RAY_HEIGHTS = [0.3, 0.9, 1.5];
+const dir = new THREE.Vector3(), side = new THREE.Vector3(), origin = new THREE.Vector3();
 
 /** Walkability built from the island: a height grid sampled from Ground + ray checks on WalkBlockers. */
 export function createWalkWorld(island, { cell = 0.25, radius = 9.5 } = {}) {
@@ -40,12 +42,21 @@ export function createWalkWorld(island, { cell = 0.25, radius = 9.5 } = {}) {
       return (h[0] * (1 - u) + h[1] * u) * (1 - v) + (h[2] * (1 - u) + h[3] * u) * v;
     },
     blocked(from, to) {
-      const d = to.clone().sub(from); d.y = 0;
-      const len = d.length();
+      dir.subVectors(to, from); dir.y = 0;
+      const len = dir.length();
       if (len === 0) return false;
-      ray.set(from.clone().setY(from.y + 0.5), d.normalize());
+      dir.normalize();
+      side.set(-dir.z, 0, dir.x).multiplyScalar(PLAYER_RADIUS * 0.85);
       ray.far = len + PLAYER_RADIUS;
-      return ray.intersectObject(blockers, true).length > 0;
+      // knees, chest and head height; centre and both shoulders
+      for (const h of RAY_HEIGHTS) {
+        for (const s of [0, 1, -1]) {
+          origin.copy(from).addScaledVector(side, s); origin.y = from.y + h;
+          ray.set(origin, dir);
+          if (ray.intersectObject(blockers, true).length > 0) return true;
+        }
+      }
+      return false;
     },
   };
 }

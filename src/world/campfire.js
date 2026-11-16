@@ -8,7 +8,7 @@ export function createCampfire(position) {
   const mat = new THREE.ShaderMaterial({
     uniforms: { time: { value: 0 }, outer: { value: new THREE.Color(palette.fire) }, core: { value: new THREE.Color(palette.fireCore) } },
     vertexShader: /* glsl */`
-      uniform float time; attribute float seed; varying float vH;
+      uniform float time; varying float vH;
       void main() {
         vec3 p = position;
         vH = clamp(p.y / 0.8 + 0.5, 0.0, 1.0);
@@ -28,7 +28,6 @@ export function createCampfire(position) {
     const f = new THREE.Mesh(new THREE.ConeGeometry(r, h, 16, 6), mat);
     f.position.set(x, h / 2 - 0.25, z);
     f.layers.set(1);
-    f.userData.h = h;
     flames.push(f); group.add(f);
   });
   const light = new THREE.PointLight(new THREE.Color(palette.fire), 7, 10, 2);

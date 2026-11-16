@@ -8,6 +8,8 @@ import { createWater } from './world/water.js';
 import { createCampfire } from './world/campfire.js';
 import { createPanel } from './ui/panel.js';
 import { t } from './i18n/index.js';
+import { viewportSize } from './render/viewport.js';
+import { applyTheme } from './ui/theme.js';
 import { setupCharacters } from './character/probeSetup.js';
 import { setupVoice } from './voice/probeSetup.js';
 import { setupFirstPerson } from './player/probeSetup.js';
@@ -16,7 +18,9 @@ import { createWalkWorld } from './player/world.js';
 const renderer = new THREE.WebGLRenderer({ antialias: false });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+applyTheme();
+document.title = t('probe.title');
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -28,7 +32,7 @@ camera.layers.enable(1);
 const outline = new OutlineRenderer(renderer, { color: palette.outline, thicknessCssPx: 1.5 });
 
 scene.add(new THREE.HemisphereLight(new THREE.Color(palette.sky), new THREE.Color(palette.grassDark), 1.6));
-const sun = new THREE.DirectionalLight(0xfff1dc, 2.2);
+const sun = new THREE.DirectionalLight(new THREE.Color(palette.sun), 2.2);
 sun.position.set(12, 22, 8);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
@@ -59,7 +63,7 @@ function setOrbitView(name) {
 }
 
 function resize() {
-  const w = window.innerWidth, h = window.innerHeight, dpr = Math.min(window.devicePixelRatio, 2);
+  const { width: w, height: h, dpr } = viewportSize(window.innerWidth, window.innerHeight, window.devicePixelRatio);
   renderer.setPixelRatio(dpr);
   renderer.setSize(w, h);
   outline.setSize(w, h, dpr);
@@ -67,6 +71,10 @@ function resize() {
   camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', resize);
+// moving the window to a screen with another pixel density fires no resize event
+(function watchDpr() {
+  matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener('change', () => { resize(); watchDpr(); }, { once: true });
+})();
 resize();
 
 async function init() {
@@ -101,9 +109,10 @@ async function init() {
   window.__probeReady = true;
 }
 
-const clock = new THREE.Clock();
-renderer.setAnimationLoop(() => {
-  const dt = Math.min(clock.getDelta(), 0.05), time = clock.elapsedTime;
+const timer = new THREE.Timer();
+renderer.setAnimationLoop((now) => {
+  timer.update(now);
+  const dt = Math.min(timer.getDelta(), 0.05), time = timer.getElapsed();
   for (const u of probe.updaters) u(time, dt);
   if (controls.enabled) controls.update();
   outline.render(scene, camera);

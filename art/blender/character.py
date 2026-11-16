@@ -202,17 +202,26 @@ def build():
         tube(bm, pts, [(0.15, 0.145), (0.148, 0.142), (0.142, 0.135), (0.136, 0.128), (0.134, 0.125)], Y, n=2.4, segs=24)
     shirt_body = finish("ShirtBody", bm, ["shirt"], M)
 
+    def shirt_front(z):
+        """y of the shirt's front surface at height z (front is -Y)."""
+        for (z0, (_, d0)), (z1, (_, d1)) in zip(zip(zs, sz), zip(zs[1:], sz[1:])):
+            if z0 <= z <= z1:
+                return 0.02 - (d0 + (d1 - d0) * (z - z0) / (z1 - z0)) / 2
+        return 0.02 - sz[-1][1] / 2
+
     bm = bmesh.new()
     tube(bm, lerp_pts(Vector((0, 0.012, 1.455)), Vector((0, 0.008, 1.505)), 3), [(0.135, 0.13)] * 3, X, segs=24)
     for s in (-1, 1):
         rounded_box(bm, Vector((s * 0.038, -0.078, 1.47)), (0.07, 0.012, 0.055), 0.006,
                     rot=Euler((0.55, 0, s * -0.55)).to_matrix().to_4x4(), segs=2)
-    rounded_box(bm, Vector((0.095, -0.127, 1.33)), (0.072, 0.008, 0.075), 0.005, segs=2)  # pocket
-    collar = finish("ShirtDetails", bm, ["shirt"], M)
+    collar = finish("Collar", bm, ["shirt"], M)
+    bm = bmesh.new()
+    rounded_box(bm, Vector((0.095, shirt_front(1.33) - 0.002, 1.33)), (0.072, 0.008, 0.075), 0.005, segs=2)
+    pocket = finish("Pocket", bm, ["shirt"], M)
     bm = bmesh.new()
     for z in (1.4, 1.3, 1.2, 1.1):
         bmesh.ops.create_cone(bm, cap_ends=True, segments=12, radius1=0.0085, radius2=0.0085, depth=0.006,
-                              matrix=Matrix.Translation((0, -0.126 if z > 1.15 else -0.122, z)) @ Euler((math.pi / 2, 0, 0)).to_matrix().to_4x4())
+                              matrix=Matrix.Translation((0, shirt_front(z) - 0.002, z)) @ Euler((math.pi / 2, 0, 0)).to_matrix().to_4x4())
     buttons = finish("Buttons", bm, ["buttons"], M)
 
     # ===== Pants: hips + straight legs (auto) =====
@@ -268,9 +277,22 @@ def build():
     rigid(hair, RIG["head"]); bind(hair, arm)
 
     auto_weights([shirt_body], arm)
-    for part in (collar, buttons):
+    for part in (pocket, buttons):
         copy_weights(part, shirt_body); bind(part, arm)
-    shirt = join([shirt_body, collar, buttons], "Shirt")
+    # the collar rides the neck: it moves with it and vanishes with it in first person
+    rigid(collar, RIG["neck"]); bind(collar, arm)
+    shirt = join([shirt_body, collar, pocket, buttons], "Shirt")
+    # the rest of the shirt follows the torso and arms, not the neck: the neck is
+    # collapsed in first person and would drag the shirt into spikes
+    neck_g = shirt.vertex_groups[RIG["neck"]]
+    collar_vs = {v.index for v in shirt.data.vertices
+                 if any(g.group == neck_g.index and g.weight > 0.99 for g in v.groups)}
+    for v in shirt.data.vertices:
+        if v.index not in collar_vs:
+            for g in [g for g in v.groups if shirt.vertex_groups[g.group].name.startswith(("neck", "Head"))]:
+                shirt.vertex_groups[g.group].remove([v.index])
+    select_only([shirt], shirt)
+    bpy.ops.object.vertex_group_normalize_all(lock_active=False)
 
     auto_weights([pants], arm)
     # trousers follow only hips and legs, otherwise the seat shears when walking

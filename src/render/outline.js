@@ -6,6 +6,8 @@ export function outlineThicknessPx(cssPx, dpr) {
 }
 
 const fullscreen = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const FLAT_NORMAL = new THREE.Color().setRGB(0.5, 0.5, 1, THREE.LinearSRGBColorSpace);
+const prevClear = new THREE.Color();
 
 /**
  * Renders the scene with dark outlines where depth or surface direction jumps.
@@ -19,7 +21,7 @@ export class OutlineRenderer {
     const opts = { type: THREE.HalfFloatType, samples: 4 };
     this.colorTarget = new THREE.WebGLRenderTarget(1, 1, opts);
     this.colorTarget.depthTexture = new THREE.DepthTexture(1, 1);
-    this.normalTarget = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
+    this.normalTarget = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 });
     this.normalTarget.depthTexture = new THREE.DepthTexture(1, 1);
     this.normalMaterial = new THREE.MeshNormalMaterial();
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
@@ -83,9 +85,12 @@ export class OutlineRenderer {
     scene.background = null; scene.fog = null;
     scene.overrideMaterial = this.normalMaterial;
     r.setRenderTarget(this.normalTarget);
-    r.setClearColor(0x7f7fff, 1); r.clear();
+    r.getClearColor(prevClear);
+    const prevAlpha = r.getClearAlpha();
+    r.setClearColor(FLAT_NORMAL, 1); r.clear();
     r.render(scene, camera);
     scene.overrideMaterial = null;
+    r.setClearColor(prevClear, prevAlpha);
     scene.background = bg; scene.fog = fog;
     camera.layers.mask = layers;
     // colour

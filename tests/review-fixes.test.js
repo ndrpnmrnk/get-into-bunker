@@ -29,7 +29,7 @@ describe('review: shadow map renders once per frame', () => {
     const shadowMap = { autoUpdate: true, needsUpdate: false };
     const updates = [];
     const fake = {
-      shadowMap, setRenderTarget() {}, setClearColor() {}, clear() {},
+      shadowMap, setRenderTarget() {}, setClearColor() {}, clear() {}, getClearColor(c) { return c; }, getClearAlpha() { return 1; },
       render(scene) { if (scene.isScene && (shadowMap.autoUpdate || shadowMap.needsUpdate)) updates.push(1); shadowMap.needsUpdate = false; },
     };
     const o = new OutlineRenderer(fake, { color: '#000000' });
