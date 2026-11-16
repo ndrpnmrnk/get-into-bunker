@@ -8,6 +8,7 @@ import { createWater } from './world/water.js';
 import { createCampfire } from './world/campfire.js';
 import { createPanel } from './ui/panel.js';
 import { t } from './i18n/index.js';
+import { setupCharacters } from './character/probeSetup.js';
 
 const renderer = new THREE.WebGLRenderer({ antialias: false });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -36,12 +37,12 @@ scene.add(sun);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-export const probe = { scene, camera, renderer, controls, world: {}, updaters: [], views: {}, panel: createPanel() };
+const probe = { scene, camera, renderer, controls, world: {}, updaters: [], views: {}, panel: createPanel() };
 window.__probe = probe;
 
 const VIEWS = {
   overview: { pos: [17, 13, 19], target: [0, 4, 0] },
-  closeup: { pos: [0.6, 5.6, 7.2], target: [0, 4.7, 0] },
+  closeup: { pos: [0, 5.5, 3.4], target: [0, 4.75, -2.4] },
 };
 probe.views.overview = () => setOrbitView('overview');
 probe.views.closeup = () => setOrbitView('closeup');
@@ -86,7 +87,7 @@ async function init() {
   probe.panel.button('probe.viewOverview', () => probe.views.overview());
   probe.panel.button('probe.viewCloseup', () => probe.views.closeup());
 
-  for (const setup of probe.setups ?? []) await setup(probe, loader);
+  await setupCharacters(probe, loader);
 
   const view = new URLSearchParams(location.search).get('view') ?? 'overview';
   (probe.views[view] ?? probe.views.overview)();
@@ -102,8 +103,4 @@ renderer.setAnimationLoop(() => {
   outline.render(scene, camera);
 });
 
-probe.setups = [];
-export function registerSetup(fn) { probe.setups.push(fn); }
-
-await Promise.resolve();
 init();
