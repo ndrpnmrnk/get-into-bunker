@@ -19,15 +19,17 @@ def hex_to_rgba(h):
     lin = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in srgb]
     return (*lin, 1.0)
 
-def material(name, palette=None):
-    """Flat material named by a palette key; the web app re-skins it by name."""
+def material(name, palette=None, key=None):
+    """Flat material named `name`, coloured from palette `key` (default: name).
+    The web app re-skins materials by name."""
     palette = palette or load_palette()
+    key = key or name
     m = bpy.data.materials.get(name) or bpy.data.materials.new(name)
     m.use_nodes = True
     bsdf = m.node_tree.nodes.get("Principled BSDF")
-    bsdf.inputs["Base Color"].default_value = hex_to_rgba(palette[name])
+    bsdf.inputs["Base Color"].default_value = hex_to_rgba(palette[key])
     bsdf.inputs["Roughness"].default_value = 0.9
-    m.diffuse_color = hex_to_rgba(palette[name])
+    m.diffuse_color = hex_to_rgba(palette[key])
     return m
 
 def reset_scene():
@@ -37,10 +39,14 @@ def import_ual():
     bpy.ops.import_scene.gltf(filepath=UAL_GLB)
     return [o for o in bpy.data.objects if o.type == "ARMATURE"][0]
 
-def export_glb(path, animations):
+def export_glb(path, animations, objects=None):
     os.makedirs(os.path.dirname(path), exist_ok=True)
+    if objects:
+        bpy.ops.object.select_all(action="DESELECT")
+        for o in objects:
+            o.select_set(True)
     bpy.ops.export_scene.gltf(
-        filepath=path, export_format="GLB", export_animations=animations,
+        filepath=path, export_format="GLB", use_selection=bool(objects), export_animations=animations,
         export_apply=False, export_yup=True, export_materials="EXPORT",
         export_morph=True, export_skins=True, export_extras=True,
         export_animation_mode="ACTIONS" if animations else "ACTIVE_ACTIONS",
